@@ -1,2 +1,2 @@
 # SAD-Python-Minesweeper
-GTK Minesweeper written with Python
+GTK Minesweeper written in Python
