@@ -13,14 +13,14 @@ class TileType(Enum):
 class Tile:
     def __init__(self, type):
         self.type = type #MINE or FREE
-        self.hidden = True
+        self.hidden = False
         self.value = 0
 
-    def add(self):
-        self.value =+ 1
+    def addMine(self):
+        self.value += 1
 
     def show(self):
-        self.hidden = False
+        self.hidden = False # TODO: Set to true
 
     def __str__(self):
         string = ""
@@ -34,6 +34,8 @@ class Tile:
 
         return string
 
+# TODO: Reveal adjacent '0' tiles and first numbered tiles
+# TODO: Lose the game if X is clicked
 
 class Board:
 	def __init__(self, size):
@@ -53,40 +55,39 @@ class Board:
 		print()
 		for i in range(size):
 			for j in range(size):
-				if (self.board[i][j] == 0):
+				if (self.board[i][j].type == TileType.FREE):
 					if (i > 0 and j > 0):
-						if (self.board[i-1][j-1] == 10):
-							self.board[i][j].add()
-
+						if (self.board[i-1][j-1].type == TileType.MINE):
+							self.board[i][j].addMine()
 					if (j > 0):
-						if (self.board[i][j-1] == 10):
-							self.board[i][j].add()
+						if (self.board[i][j-1].type == TileType.MINE):
+							self.board[i][j].addMine()
 
 					if (i < size-1 and j > 0):
-						if (self.board[i+1][j-1] == 10):
-					 		self.board[i][j].add()
+						if (self.board[i+1][j-1].type == TileType.MINE):
+					 		self.board[i][j].addMine()
 
 					if (i > 0):
-						if (self.board[i-1][j] == 10):
-							self.board[i][j].add()
+						if (self.board[i-1][j].type == TileType.MINE):
+							self.board[i][j].addMine()
 
 					if (i < size - 1):
-						if (self.board[i+1][j] == 10):
-							self.board[i][j].add()
+						if (self.board[i+1][j].type == TileType.MINE):
+							self.board[i][j].addMine()
 
 					if (i > 0 and j < size -1):
-						if(self.board[i-1][j+1] == 10):
-							self.board[i][j].add()
+						if(self.board[i-1][j+1].type == TileType.MINE):
+							self.board[i][j].addMine()
 
 					if (j < size - 1):
-						if(self.board[i][j+1] == 10):
-							self.board[i][j].add()
+						if(self.board[i][j+1].type == TileType.MINE):
+							self.board[i][j].addMine()
 
 					if (i < size -1 and j < size - 1):
-						if (self.board[i+1][j+1] == 10):
-							self.board[i][j].add()
+						if (self.board[i+1][j+1].type == TileType.MINE):
+							self.board[i][j].addMine()
 
-				if(self.board[i][j] != 10):
+				if(self.board[i][j].type != TileType.MINE):
 					print(self.board[i][j], end=" ")
 				else:
 					print("X", end=" ")
