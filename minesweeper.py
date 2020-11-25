@@ -3,68 +3,118 @@ import random
 
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
+from enum import Enum
 
 # Game
+class TileType(Enum):
+	FREE = 0
+	MINE = 1
+
+class Tile:
+    def __init__(self, type):
+        self.type = type #MINE or FREE
+        self.hidden = True
+        self.value = 0
+
+    def add(self):
+        self.value =+ 1
+
+    def show(self):
+        self.hidden = False
+
+    def __str__(self):
+        string = ""
+        if(self.hidden):
+            string = ""
+        else:
+            if(self.type == TileType.FREE):
+                string = str(self.value)
+            else:
+                string = "X"
+
+        return string
+
 
 class Board:
 	def __init__(self, size):
 		self.size = size;
-		board = [[0 for i in range(size)] for j in range(size)]
+		self.board = [[Tile(TileType.FREE) for i in range(size)] for j in range(size)]
 		for i in range(size):
 			for j in range(size):
 				x = random.uniform(0,1)
 				if (x >= 10/64):
-					board[i][j] = 0 # no mine
+					self.board[i][j] = Tile(TileType.FREE) # no mine
 					print("0", end=" ")
 				else:
-					board[i][j] = 10 # mine
+					self.board[i][j] = Tile(TileType.MINE) # mine
 					print("X", end=" ")
 
 			print()
 		print()
 		for i in range(size):
 			for j in range(size):
-				if (board[i][j] == 0):
+				if (self.board[i][j] == 0):
 					if (i > 0 and j > 0):
-						if (board[i-1][j-1] == 10):
-							board[i][j]+= 1
+						if (self.board[i-1][j-1] == 10):
+							self.board[i][j].add()
 
 					if (j > 0):
-						if (board[i][j-1] == 10):
-							board[i][j]+= 1
+						if (self.board[i][j-1] == 10):
+							self.board[i][j].add()
 
 					if (i < size-1 and j > 0):
-						if (board[i+1][j-1] == 10):
-					 		board[i][j]+= 1
+						if (self.board[i+1][j-1] == 10):
+					 		self.board[i][j].add()
 
 					if (i > 0):
-						if (board[i-1][j] == 10):
-							board[i][j]+= 1
+						if (self.board[i-1][j] == 10):
+							self.board[i][j].add()
 
 					if (i < size - 1):
-						if (board[i+1][j] == 10):
-							board[i][j]+= 1
+						if (self.board[i+1][j] == 10):
+							self.board[i][j].add()
 
 					if (i > 0 and j < size -1):
-						if(board[i-1][j+1] == 10):
-							board[i][j]+= 1
+						if(self.board[i-1][j+1] == 10):
+							self.board[i][j].add()
 
 					if (j < size - 1):
-						if(board[i][j+1] == 10):
-							board[i][j]+= 1
+						if(self.board[i][j+1] == 10):
+							self.board[i][j].add()
 
 					if (i < size -1 and j < size - 1):
-						if (board[i+1][j+1] == 10):
-							board[i][j]+= 1
+						if (self.board[i+1][j+1] == 10):
+							self.board[i][j].add()
 
-				if(board[i][j] != 10):
-					print(board[i][j], end=" ")
+				if(self.board[i][j] != 10):
+					print(self.board[i][j], end=" ")
 				else:
 					print("X", end=" ")
 			print()
 
+class MainWindow(Gtk.Window):
+	def __init__(self, size, board):
+		Gtk.Window.__init__(self, title="Minesweeper")
+		self.grid = Gtk.Grid()
+		self.add(self.grid)
 
+		for i in range(size):
+			for j in range(size):
+				button = Gtk.Button(label=board.board[i][j])
+				self.grid.attach(button, i, j, 1, 1)
+				button.connect("clicked", self.on_clicked, i, j)
 
+	def on_clicked(self, button, i, j):
+		print("Click", i, j)
+		board.board[i][j].show()
+		self.update_single_button(i, j)
+
+	def update_single_button(self, i, j):
+			button = self.grid.get_child_at(i, j)
+			button.set_label(str(board.board[i][j]))
 board = Board(8)
 
-
+window = MainWindow(8, board)
+window.connect("destroy", Gtk.main_quit)
+window.show_all()
+Gtk.main()
