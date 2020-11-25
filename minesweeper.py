@@ -13,14 +13,14 @@ class TileType(Enum):
 class Tile:
     def __init__(self, type):
         self.type = type #MINE or FREE
-        self.hidden = False
+        self.hidden = True # TODO: Set to true
         self.value = 0
 
     def addMine(self):
         self.value += 1
 
     def show(self):
-        self.hidden = False # TODO: Set to true
+        self.hidden = True 
 
     def __str__(self):
         string = ""
