@@ -15,7 +15,7 @@ class TileType(Enum):
 class Tile:
 	def __init__(self, type):
 		self.type = type #FREE, MINE
-		self.hidden = True # TODO: Set to true
+		self.hidden = True
 		if type == TileType.MINE:
 			self.value = 9
 		else:
@@ -32,14 +32,15 @@ class Tile:
 		if(self.hidden):
 			string = ""
 		else:
-			if(self.type == TileType.FREE):
+			if(self.type == TileType.FREE and self.value != 0):
 				string = str(self.value)
-			else:
-				string = "X"
+			elif(self.type == TileType.MINE):
+				string = "💣"
 		return string
 
-# TODO: Reveal adjacent '0' tiles and first numbered tiles
-# TODO: Lose the game if X is clicked
+# TODO: Win condition
+# TODO: Lose dialog
+# TODO: Mine icon for mines and red buttons
 
 class Board:
 	def __init__(self, size):
@@ -112,7 +113,7 @@ class MainWindow(Gtk.Window):
 	def __init__(self, size, board):
 		Gtk.Window.__init__(self, title="Minesweeper", resizable=False)
 		self.set_border_width(10)
-		self.grid = Gtk.Grid(column_spacing=4, row_spacing=4)
+		self.grid = Gtk.Grid(column_spacing=0, row_spacing=0)
 		self.add(self.grid)
 		self.board = board
 		self.size = size
@@ -123,20 +124,21 @@ class MainWindow(Gtk.Window):
 				button = Gtk.ToggleButton(label=board.board[i][j])
 				#button = Gtk.Button(label=str(i) + " " + str(j))
 				button.connect("clicked", self.on_clicked, i, j)
-				button.set_size_request(50,50);
+				button.set_size_request(55,55);
 				self.grid.attach(button, i, j, 1, 1)
 			#print()
 
 
 	def on_clicked(self, button, i, j):
 		button.set_active(True)
-		print("Click", i, j, "- Board", self.board.board[i][j].value)
+		#print("Click", i, j, "- Board", self.board.board[i][j].value)
 		self.click(i,j)
 
 	def update_single_button(self, i, j):
-			button = self.grid.get_child_at(i, j)
-			button.set_active(True)
-			button.set_label(str(board.board[i][j]))
+		button = self.grid.get_child_at(i, j)
+		button.set_active(True)
+		button.set_label(str(board.board[i][j]))
+		button.set_name("pulsado")
 
 	def click(self, i, j):
 		size = self.size
@@ -149,7 +151,18 @@ class MainWindow(Gtk.Window):
 
 		elif (self.board.board[i][j].type == TileType.MINE and self.board.board[i][j].hidden):
 			#Lose the game
-			print("You lost!")
+			self.lose()
+
+	def lose(self):
+		# Uncover all
+		for i in range(self.size):
+			for j in range(self.size):
+				self.board.board[i][j].show()
+				self.update_single_button(i,j)
+		#print("You lose")
+		dialog = Gtk.MessageDialog(transient_for=self, flags=0, message_type=Gtk.MessageType.INFO, buttons=Gtk.ButtonsType.OK, text="You lose")
+		dialog.run()
+		dialog.destroy()
 
 	def showZeros(self, i, j):
 		#print("SHOWZEROS: ", i, "", j)
@@ -169,10 +182,6 @@ class MainWindow(Gtk.Window):
 					self.showZeros(i + 1, j - 1)
 					self.showZeros(i - 1, j + 1)
 					self.showZeros(i - 1, j - 1)
-
-
-
-
 
 
 board = Board(8)
