@@ -50,6 +50,8 @@ class Tile:
 # TODO: HeaderBar
 # TODO: Remove prints
 # TODO: Start over
+# TODO: Bomb exploded proper icon
+# TODO: Flag functionality
 
 class Board:
 	def __init__(self, size):
