@@ -120,7 +120,7 @@ class MainWindow(Gtk.Window):
 		for i in range(size):
 			for j in range(size):
 				#print(board.board[i][j], end=" ")
-				button = Gtk.Button(label=board.board[i][j])
+				button = Gtk.ToggleButton(label=board.board[i][j])
 				#button = Gtk.Button(label=str(i) + " " + str(j))
 				button.connect("clicked", self.on_clicked, i, j)
 				button.set_size_request(50,50);
@@ -129,11 +129,14 @@ class MainWindow(Gtk.Window):
 
 
 	def on_clicked(self, button, i, j):
+		button.set_active(True)
 		print("Click", i, j, "- Board", self.board.board[i][j].value)
 		self.click(i,j)
 
 	def update_single_button(self, i, j):
-			button = self.grid.get_child_at(i, j).set_label(str(board.board[i][j]))
+			button = self.grid.get_child_at(i, j)
+			button.set_active(True)
+			button.set_label(str(board.board[i][j]))
 
 	def click(self, i, j):
 		size = self.size
@@ -149,16 +152,14 @@ class MainWindow(Gtk.Window):
 			print("You lost!")
 
 	def showZeros(self, i, j):
-		print("SHOWZEROS: ", i, "", j)
+		#print("SHOWZEROS: ", i, "", j)
 		if(not(i < 0 or i > self.size - 1 or j < 0 or j > self.size - 1)):
 			# Don't check tiles out of the board!
 			# Show the tile if it is next to a 0 and it is hidden
-			print(self.board.board[i][j].hidden)
 			if (self.board.board[i][j].hidden):
 				self.board.board[i][j].show()
 				self.update_single_button(i,j)
 				# And then, if it is another 0
-				print(self.board.board[i][j].hidden)
 				if(self.board.board[i][j].value == 0):
 					self.showZeros(i + 1, j)
 					self.showZeros(i - 1, j)
