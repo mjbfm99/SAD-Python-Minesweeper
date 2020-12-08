@@ -45,20 +45,24 @@ class Tile:
 				string = "💣"
 		return string
 
-# TODO: Win condition
-# TODO: CSS
+# TODO: Win style
 # TODO: Ask user for board size
+# TODO: HeaderBar
+# TODO: Remove prints
+# TODO: Start over
 
 class Board:
 	def __init__(self, size):
 		self.size = size;
 		self.board = [[Tile(TileType.FREE) for i in range(size)] for j in range(size)]
+		self.still_hidden = 0
 		for i in range(size):
 			for j in range(size):
 				x = random.uniform(0,1)
 				if (x >= 10/64):
 					self.board[i][j] = Tile(TileType.FREE) # no mine
-					#print("0", end=" ")
+					self.still_hidden += 1
+					#print(self.still_hidden, end=" ")
 				else:
 					self.board[i][j] = Tile(TileType.MINE) # mine
 					#print("X", end=" ")
@@ -104,11 +108,6 @@ class Board:
 				#else:
 					#print("X", end=" ")
 			#print()
-
-		for j in range(size):
-			for i in range(size):
-				print(self.board[i][j], end=" ")
-			print()
 	def print(self):
 		for j in range(self.size):
 			for i in range(self.size):
@@ -153,26 +152,35 @@ class MainWindow(Gtk.Window):
 			if (self.board.board[i][j].value == 0):
 				self.showZeros(i, j)
 			else:
+				board.still_hidden -= 1
 				self.board.board[i][j].show()
 				self.update_single_button(i,j)
-
+			if(board.still_hidden == 0):
+				self.win()
 		elif (self.board.board[i][j].type == TileType.MINE and self.board.board[i][j].hidden):
 			#Lose the game
 			self.lose()
+		#print(board.still_hidden)
 
 	def lose(self):
 		# Uncover all
+		board.still_hidden = -1
 		for i in range(self.size):
 			for j in range(self.size):
 				self.board.board[i][j].show()
 				self.update_single_button(i,j)
 				if(self.board.board[i][j].type == TileType.MINE):
 					self.grid.get_child_at(i, j).get_style_context().add_class(Gtk.STYLE_CLASS_DESTRUCTIVE_ACTION)
-		#print("You lose")
-		dialog = Gtk.MessageDialog(transient_for=self, flags=0, message_type=Gtk.MessageType.INFO, buttons=Gtk.ButtonsType.OK, text="You lose")
+		dialog = Gtk.MessageDialog(transient_for=self, flags=0, message_type=Gtk.MessageType.INFO, buttons=Gtk.ButtonsType.OK, text="Game over")
+		dialog.format_secondary_text("Mine exploded")
 		dialog.run()
 		dialog.destroy()
 
+	def win(self):
+		dialog = Gtk.MessageDialog(transient_for=self, flags=0, message_type=Gtk.MessageType.INFO, buttons=Gtk.ButtonsType.OK, text="You win!")
+		dialog.format_secondary_text("Congratulations")
+		dialog.run()
+		dialog.destroy()
 	def showZeros(self, i, j):
 		#print("SHOWZEROS: ", i, "", j)
 		if(not(i < 0 or i > self.size - 1 or j < 0 or j > self.size - 1)):
@@ -180,6 +188,7 @@ class MainWindow(Gtk.Window):
 			# Show the tile if it is next to a 0 and it is hidden
 			if (self.board.board[i][j].hidden):
 				self.board.board[i][j].show()
+				board.still_hidden -= 1
 				self.update_single_button(i,j)
 				# And then, if it is another 0
 				if(self.board.board[i][j].value == 0):
@@ -194,7 +203,7 @@ class MainWindow(Gtk.Window):
 
 
 board = Board(8)
-board.print()
+#board.print()
 window = MainWindow(8, board)
 window.connect("destroy", Gtk.main_quit)
 window.show_all()
