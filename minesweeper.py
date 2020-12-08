@@ -4,8 +4,15 @@ import sys
 sys.tracebacklimit = 3
 
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk, Gdk
+from gi.repository import Gtk, Gdk, Gio
 from enum import Enum
+
+css = 'grid {border: 2px solid@borders;} #grid-button{ border-radius: 0px; border-width: 2px; border: 1px solid@borders;'
+css_provider = Gtk.CssProvider()
+css_provider.load_from_file(Gio.File.new_for_path('styles.css'))
+context = Gtk.StyleContext()
+screen = Gdk.Screen.get_default()
+context.add_provider_for_screen(screen, css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
 # Game
 class TileType(Enum):
@@ -39,8 +46,8 @@ class Tile:
 		return string
 
 # TODO: Win condition
-# TODO: Lose dialog
-# TODO: Mine icon for mines and red buttons
+# TODO: CSS
+# TODO: Ask user for board size
 
 class Board:
 	def __init__(self, size):
@@ -126,6 +133,7 @@ class MainWindow(Gtk.Window):
 				button.connect("clicked", self.on_clicked, i, j)
 				button.set_size_request(55,55);
 				self.grid.attach(button, i, j, 1, 1)
+				button.set_name("grid-button")
 			#print()
 
 
@@ -138,7 +146,6 @@ class MainWindow(Gtk.Window):
 		button = self.grid.get_child_at(i, j)
 		button.set_active(True)
 		button.set_label(str(board.board[i][j]))
-		button.set_name("pulsado")
 
 	def click(self, i, j):
 		size = self.size
@@ -159,6 +166,8 @@ class MainWindow(Gtk.Window):
 			for j in range(self.size):
 				self.board.board[i][j].show()
 				self.update_single_button(i,j)
+				if(self.board.board[i][j].type == TileType.MINE):
+					self.grid.get_child_at(i, j).get_style_context().add_class(Gtk.STYLE_CLASS_DESTRUCTIVE_ACTION)
 		#print("You lose")
 		dialog = Gtk.MessageDialog(transient_for=self, flags=0, message_type=Gtk.MessageType.INFO, buttons=Gtk.ButtonsType.OK, text="You lose")
 		dialog.run()
