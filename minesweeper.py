@@ -1,7 +1,7 @@
 import gi
 import random
 import sys
-#sys.tracebacklimit = 0
+sys.tracebacklimit = 3
 
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk
@@ -13,31 +13,30 @@ class TileType(Enum):
 	MINE = 1
 
 class Tile:
-    def __init__(self, type):
-        self.type = type #FREE, MINE
-        self.hidden = False # TODO: Set to true
-        if type == TileType.MINE:
-            self.value = 9
-        else:
-            self.value = 0
+	def __init__(self, type):
+		self.type = type #FREE, MINE
+		self.hidden = True # TODO: Set to true
+		if type == TileType.MINE:
+			self.value = 9
+		else:
+			self.value = 0
 
-    def addMine(self):
-        self.value += 1
+	def addMine(self):
+		self.value += 1
 
-    def show(self):
-        self.hidden = False
+	def show(self):
+		self.hidden = False
 
-    def __str__(self):
-        string = ""
-        if(self.hidden):
-            string = ""
-        else:
-            if(self.type == TileType.FREE):
-                string = str(self.value)
-            else:
-                string = "X"
-
-        return string
+	def __str__(self):
+		string = ""
+		if(self.hidden):
+			string = ""
+		else:
+			if(self.type == TileType.FREE):
+				string = str(self.value)
+			else:
+				string = "X"
+		return string
 
 # TODO: Reveal adjacent '0' tiles and first numbered tiles
 # TODO: Lose the game if X is clicked
@@ -102,6 +101,12 @@ class Board:
 			for i in range(size):
 				print(self.board[i][j], end=" ")
 			print()
+	def print(self):
+		for j in range(self.size):
+			for i in range(self.size):
+				print(self.board[i][j].value, end=" ")
+			print()
+
 
 class MainWindow(Gtk.Window):
 	def __init__(self, size, board):
@@ -125,7 +130,7 @@ class MainWindow(Gtk.Window):
 
 	def on_clicked(self, button, i, j):
 		print("Click", i, j, "- Board", self.board.board[i][j].value)
-		self.click(j,i)
+		self.click(i,j)
 
 	def update_single_button(self, i, j):
 			button = self.grid.get_child_at(i, j).set_label(str(board.board[i][j]))
@@ -133,68 +138,45 @@ class MainWindow(Gtk.Window):
 	def click(self, i, j):
 		size = self.size
 		if (self.board.board[i][j].type == TileType.FREE and self.board.board[i][j].hidden):
-			self.board.board[i][j].show()
-			self.update_single_button(i,j)
 			if (self.board.board[i][j].value == 0):
-				if (i > 0 and j > 0):
-					if (self.board.board[i-1][j-1].value == 0 and self.board.board[i-1][j-1].hidden):
-						self.click(i-1,j-1)
-					else:
-						self.board.board[i-1][j-1].show()
-						self.update_single_button(i-1,j-1)
+				self.showZeros(i, j)
+			else:
+				self.board.board[i][j].show()
+				self.update_single_button(i,j)
 
-				if (j > 0):
-					if (self.board.board[i][j-1].value == 0 and self.board.board[i-1][j-1].hidden):
-						self.click(i,j-1)
-					else:
-						self.board.board[i][j-1].show()
-						self.update_single_button(i,j-1)
+		elif (self.board.board[i][j].type == TileType.MINE and self.board.board[i][j].hidden):
+			#Lose the game
+			print("You lost!")
 
-				if (i < size-1 and j > 0):
-					if (self.board.board[i+1][j-1].value == 0 and self.board.board[i-1][j-1].hidden):
-				 		self.click(i+1,j-1)
-					else:
-						self.board.board[i+1][j-1].show()
-						self.update_single_button(i+1,j-1)
+	def showZeros(self, i, j):
+		print("SHOWZEROS: ", i, "", j)
+		if(not(i < 0 or i > self.size - 1 or j < 0 or j > self.size - 1)):
+			# Don't check tiles out of the board!
+			# Show the tile if it is next to a 0 and it is hidden
+			print(self.board.board[i][j].hidden)
+			if (self.board.board[i][j].hidden):
+				self.board.board[i][j].show()
+				self.update_single_button(i,j)
+				# And then, if it is another 0
+				print(self.board.board[i][j].hidden)
+				if(self.board.board[i][j].value == 0):
+					self.showZeros(i + 1, j)
+					self.showZeros(i - 1, j)
+					self.showZeros(i, j + 1)
+					self.showZeros(i, j - 1)
+					self.showZeros(i + 1, j + 1)
+					self.showZeros(i + 1, j - 1)
+					self.showZeros(i - 1, j + 1)
+					self.showZeros(i - 1, j - 1)
 
-				if (i > 0):
-					if (self.board.board[i-1][j].value == 0 and self.board.board[i-1][j-1].hidden):
-						self.click(i-1,j)
-					else:
-						self.board.board[i-1][j].show()
-						self.update_single_button(i-1,j)
 
-				if (i < size - 1):
-					if (self.board.board[i+1][j].value == 0 and self.board.board[i-1][j-1].hidden):
-						self.click(i+1,j)
-					else:
-						self.board.board[i+1][j].show()
-						self.update_single_button(i+1,j)
 
-				if (i > 0 and j < size -1):
-					if(self.board.board[i-1][j+1].value == 0 and self.board.board[i-1][j-1].hidden):
-						self.click(i-1,j+1)
-					else:
-						self.board.board[i-1][j+1].show()
-						self.update_single_button(i-1,j+1)
 
-				if (j < size - 1):
-					if(self.board.board[i][j+1].value == 0 and self.board.board[i-1][j-1].hidden):
-						self.click(i,j+1)
-					else:
-						self.board.board[i][j-1].show()
-						self.update_single_button(i,j-1)
 
-				if (i < size -1 and j < size - 1):
-					if (self.board.board[i+1][j+1].value == 0 and self.board.board[i-1][j-1].hidden):
-						self.click(i+1,j+1)
-					else:
-						self.board.board[i+1][j+1].show()
-						self.update_single_button(i+1,j+1)
 
-board = Board(5)
-
-window = MainWindow(5, board)
+board = Board(8)
+board.print()
+window = MainWindow(8, board)
 window.connect("destroy", Gtk.main_quit)
 window.show_all()
 Gtk.main()
