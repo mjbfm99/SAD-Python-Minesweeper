@@ -8,13 +8,13 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, Gio
 from enum import Enum
 
-css = 'grid { border: 2px solid@borders;}#grid-button{ border-radius: 0px; border-width: 2px; border: 1px solid@borders; padding: 0; font-size: 25px;}'.encode()
+css = 'grid { border: 2px solid@borders;}#grid-button{ border-radius: 0px; border-width: 2px; border: 1px solid@borders; padding: 0; font-size: 25px;}#size_label{font-size: 15px;}'.encode()
 css_provider = Gtk.CssProvider()
 css_provider.load_from_data(css)
 context = Gtk.StyleContext()
 screen = Gdk.Screen.get_default()
 context.add_provider_for_screen(screen, css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
-global_size = 4
+global_size = 8
 
 
 # Game
@@ -49,7 +49,7 @@ class Tile:
 		return string
 
 # DONE: Win style
-# TODO: Ask user for board size
+# DONE: Ask user for board size
 # DONE: HeaderBar
 # DONE: Remove prints
 # DONE: Start over
@@ -223,8 +223,8 @@ class MainWindow(Gtk.Window):
 		dialog.destroy()
 
 	def startOver(self, button):
-		os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
-
+		args = [sys.argv[0], str(self.size)]
+		os.execl(sys.executable, os.path.abspath(__file__), *args)
 	def showZeros(self, i, j):
 		#print("SHOWZEROS: ", i, "", j)
 		if(not(i < 0 or i > self.size - 1 or j < 0 or j > self.size - 1)):
@@ -245,10 +245,59 @@ class MainWindow(Gtk.Window):
 					self.showZeros(i - 1, j + 1)
 					self.showZeros(i - 1, j - 1)
 
+class SizeChooserDialog(Gtk.Dialog):
+	def __init__(self):
+		Gtk.Window.__init__(self, title="New game")
+		self.set_border_width(10)
+		self.add_buttons(Gtk.STOCK_OK, Gtk.ResponseType.OK)
+		self.set_size_request(400,250);
 
-board = Board(8)
-#board.print()
-window = MainWindow(8, board)
+		box = self.get_content_area()
+		box.set_spacing(6)
+
+		label = Gtk.Label(label = "Choose the size of the board:")
+		box.add(label)
+		label.set_name("size_label")
+		label.set_vexpand(True)
+
+		self.spin = Gtk.SpinButton()
+		self.spin.set_adjustment(Gtk.Adjustment(upper=16, lower=4, step_increment=1))
+		self.spin.set_value(8)
+		self.spin.connect("value-changed", self.on_value_changed)
+		self.spin.set_vexpand(False)
+		box.add(self.spin)
+
+		self.label2 = Gtk.Label()
+		box.add(self.label2)
+		self.label2.set_name("size_label")
+		self.label2.set_vexpand(True)
+		self.label2.set_markup("Your board will have <b>" + str(pow(self.spin.get_value_as_int(), 2)) + "</b> tiles")
+
+		self.show_all()
+
+		self.connect("response", self.close)
+
+	def on_value_changed(self, spin):
+		global global_size
+		global_size = self.spin.get_value_as_int()
+		self.label2.set_markup("Your board will have <b>" + str(pow(self.spin.get_value_as_int(), 2)) + "</b> tiles")
+
+	def close(self, button, response_id):
+		self.destroy()
+
+if (len(sys.argv) < 2):
+	size_chooser = SizeChooserDialog()
+	size_chooser.run()
+
+else:
+	try:
+		global_size = int(sys.argv[1])
+	except:
+		global_size = int(sys.argv[2])
+
+
+board = Board(global_size)
+window = MainWindow(global_size, board)
 window.connect("destroy", Gtk.main_quit)
 window.show_all()
 Gtk.main()
