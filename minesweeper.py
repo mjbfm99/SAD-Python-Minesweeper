@@ -1,18 +1,21 @@
+#!/usr/bin/env python
 import gi
 import random
 import sys
-sys.tracebacklimit = 3
+import os
 
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, Gio
 from enum import Enum
 
-css = 'grid {border: 2px solid@borders;} #grid-button{ border-radius: 0px; border-width: 2px; border: 1px solid@borders;'
+css = 'grid { border: 2px solid@borders;}#grid-button{ border-radius: 0px; border-width: 2px; border: 1px solid@borders; padding: 0; font-size: 25px;}'.encode()
 css_provider = Gtk.CssProvider()
-css_provider.load_from_file(Gio.File.new_for_path('styles.css'))
+css_provider.load_from_data(css)
 context = Gtk.StyleContext()
 screen = Gdk.Screen.get_default()
 context.add_provider_for_screen(screen, css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+global_size = 4
+
 
 # Game
 class TileType(Enum):
@@ -42,16 +45,17 @@ class Tile:
 			if(self.type == TileType.FREE and self.value != 0):
 				string = str(self.value)
 			elif(self.type == TileType.MINE):
-				string = "💣"
+				string = "✸"
 		return string
 
-# TODO: Win style
+# DONE: Win style
 # TODO: Ask user for board size
-# TODO: HeaderBar
-# TODO: Remove prints
-# TODO: Start over
-# TODO: Bomb exploded proper icon
-# TODO: Flag functionality
+# DONE: HeaderBar
+# DONE: Remove prints
+# DONE: Start over
+# DONE: Bomb exploded proper icon
+# DONE: Flag functionality ⚑
+# DONE: Built-in CSS
 
 class Board:
 	def __init__(self, size):
@@ -119,21 +123,40 @@ class Board:
 
 class MainWindow(Gtk.Window):
 	def __init__(self, size, board):
-		Gtk.Window.__init__(self, title="Minesweeper", resizable=False)
+		Gtk.Window.__init__(self, resizable=False)
+
 		self.set_border_width(10)
 		self.grid = Gtk.Grid(column_spacing=0, row_spacing=0)
+
+		hb = Gtk.HeaderBar()
+		hb.set_show_close_button(True)
+		hb.props.title = "Minesweeper"
+		self.set_titlebar(hb)
+
+		hb_button = Gtk.Button()
+		icon = Gio.ThemedIcon(name="view-refresh-symbolic")
+		image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
+		hb_button.connect("clicked", self.startOver)
+		hb_button.add(image)
+		hb.pack_start(hb_button)
+
 		self.add(self.grid)
+
 		self.board = board
 		self.size = size
+
 		#print()
-		for i in range(size):
-			for j in range(size):
-				#print(board.board[i][j], end=" ")
+		for i in range(self.size):
+			for j in range(self.size):
+				eventbox = Gtk.EventBox()
+				eventbox.connect("button-press-event", self.on_button_press_event, i, j)
+
 				button = Gtk.ToggleButton(label=board.board[i][j])
-				#button = Gtk.Button(label=str(i) + " " + str(j))
 				button.connect("clicked", self.on_clicked, i, j)
 				button.set_size_request(55,55);
-				self.grid.attach(button, i, j, 1, 1)
+
+				eventbox.add(button)
+				self.grid.attach(eventbox, i, j, 1, 1)
 				button.set_name("grid-button")
 			#print()
 
@@ -143,8 +166,16 @@ class MainWindow(Gtk.Window):
 		#print("Click", i, j, "- Board", self.board.board[i][j].value)
 		self.click(i,j)
 
+	def on_button_press_event(self, widget, event, i, j):
+		button = widget.get_child()
+		if event.type == Gdk.EventType.BUTTON_PRESS and event.button == 3:
+			if(button.get_label() == "" and button.get_active() == False):
+				button.set_label("⚑")
+			elif(button.get_label() == "⚑"):
+				button.set_label("")
+
 	def update_single_button(self, i, j):
-		button = self.grid.get_child_at(i, j)
+		button = self.grid.get_child_at(i, j).get_child()
 		button.set_active(True)
 		button.set_label(str(board.board[i][j]))
 
@@ -166,23 +197,34 @@ class MainWindow(Gtk.Window):
 
 	def lose(self):
 		# Uncover all
-		board.still_hidden = -1
+		self.board.still_hidden = -1
 		for i in range(self.size):
 			for j in range(self.size):
 				self.board.board[i][j].show()
 				self.update_single_button(i,j)
 				if(self.board.board[i][j].type == TileType.MINE):
-					self.grid.get_child_at(i, j).get_style_context().add_class(Gtk.STYLE_CLASS_DESTRUCTIVE_ACTION)
+					self.grid.get_child_at(i, j).get_child().get_style_context().add_class(Gtk.STYLE_CLASS_DESTRUCTIVE_ACTION)
 		dialog = Gtk.MessageDialog(transient_for=self, flags=0, message_type=Gtk.MessageType.INFO, buttons=Gtk.ButtonsType.OK, text="Game over")
 		dialog.format_secondary_text("Mine exploded")
 		dialog.run()
 		dialog.destroy()
 
 	def win(self):
+		for i in range(self.size):
+			for j in range(self.size):
+				self.board.board[i][j].show()
+				self.update_single_button(i,j)
+				if(self.board.board[i][j].type == TileType.MINE):
+					self.grid.get_child_at(i, j).get_child().set_label("⚑")
+					self.grid.get_child_at(i, j).get_child().get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 		dialog = Gtk.MessageDialog(transient_for=self, flags=0, message_type=Gtk.MessageType.INFO, buttons=Gtk.ButtonsType.OK, text="You win!")
 		dialog.format_secondary_text("Congratulations")
 		dialog.run()
 		dialog.destroy()
+
+	def startOver(self, button):
+		os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
+
 	def showZeros(self, i, j):
 		#print("SHOWZEROS: ", i, "", j)
 		if(not(i < 0 or i > self.size - 1 or j < 0 or j > self.size - 1)):
@@ -190,7 +232,7 @@ class MainWindow(Gtk.Window):
 			# Show the tile if it is next to a 0 and it is hidden
 			if (self.board.board[i][j].hidden):
 				self.board.board[i][j].show()
-				board.still_hidden -= 1
+				self.board.still_hidden -= 1
 				self.update_single_button(i,j)
 				# And then, if it is another 0
 				if(self.board.board[i][j].value == 0):

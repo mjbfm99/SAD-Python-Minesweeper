@@ -1,9 +1,0 @@
-grid {
- border: 2px solid@borders;
-}
-
-#grid-button{
- border-radius: 0px;
- border-width: 2px;
- border: 1px solid@borders;
-}
