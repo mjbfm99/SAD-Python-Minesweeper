@@ -59,14 +59,14 @@ class Tile:
 # DONE: Built-in CSS
 
 class Board:
-	def __init__(self, size):
+	def __init__(self, size, clicked_i, clicked_j):
 		self.size = size;
 		self.board = [[Tile(TileType.FREE) for i in range(size)] for j in range(size)]
 		self.still_hidden = 0
 		for i in range(size):
 			for j in range(size):
 				x = random.uniform(0,1)
-				if (x >= 10/64):
+				if (x >= 14/64):
 					self.board[i][j] = Tile(TileType.FREE) # no mine
 					self.still_hidden += 1
 					#print(self.still_hidden, end=" ")
@@ -74,8 +74,24 @@ class Board:
 					self.board[i][j] = Tile(TileType.MINE) # mine
 					#print("X", end=" ")
 
-			#print()
-		#print()
+		self.board[clicked_i][clicked_j] = Tile(TileType.FREE)
+		if (clicked_i > 0):
+			self.board[clicked_i - 1][clicked_j] = Tile(TileType.FREE)
+			if (clicked_j > 0):
+				self.board[clicked_i - 1][clicked_j - 1] = Tile(TileType.FREE)
+			if (clicked_j < size - 1):
+				self.board[clicked_i - 1][clicked_j + 1] = Tile(TileType.FREE)
+		if (clicked_i < size - 1):
+			self.board[clicked_i + 1][clicked_j] = Tile(TileType.FREE)
+			if (clicked_j > 0):
+				self.board[clicked_i + 1][clicked_j - 1] = Tile(TileType.FREE)
+			if (clicked_j < size - 1):
+				self.board[clicked_i + 1][clicked_j + 1] = Tile(TileType.FREE)
+		if (clicked_j > 0):
+			self.board[clicked_i][clicked_j - 1] = Tile(TileType.FREE)
+		if (clicked_j < size - 1):
+			self.board[clicked_i][clicked_j + 1] = Tile(TileType.FREE)
+
 		for i in range(size):
 			for j in range(size):
 				if (self.board[i][j].type == TileType.FREE):
@@ -110,11 +126,7 @@ class Board:
 						if (self.board[i+1][j+1].type == TileType.MINE):
 							self.board[i][j].addMine()
 
-				#if(self.board[i][j].type != TileType.MINE):
-					#print(self.board[i][j].value, end=" ")
-				#else:
-					#print("X", end=" ")
-			#print()
+
 	def print(self):
 		for j in range(self.size):
 			for i in range(self.size):
@@ -123,7 +135,7 @@ class Board:
 
 
 class MainWindow(Gtk.Window):
-	def __init__(self, size, board):
+	def __init__(self, size):
 		Gtk.Window.__init__(self, resizable=False)
 
 		self.set_border_width(10)
@@ -142,9 +154,9 @@ class MainWindow(Gtk.Window):
 		hb.pack_start(hb_button)
 
 		self.add(self.grid)
-
-		self.board = board
 		self.size = size
+		self.new_game = True
+		self.board = None
 
 		#print()
 		for i in range(self.size):
@@ -152,7 +164,8 @@ class MainWindow(Gtk.Window):
 				eventbox = Gtk.EventBox()
 				eventbox.connect("button-press-event", self.on_button_press_event, i, j)
 
-				button = Gtk.ToggleButton(label=board.board[i][j])
+				#button = Gtk.ToggleButton(label=board.board[i][j])
+				button = Gtk.ToggleButton(label="")
 				button.connect("clicked", self.on_clicked, i, j)
 				button.set_size_request(55,55);
 
@@ -163,9 +176,13 @@ class MainWindow(Gtk.Window):
 
 
 	def on_clicked(self, button, i, j):
+		if(self.board == None):
+			new_game = False
+			self.board = Board(self.size, i, j)
+
 		button.set_active(True)
-		#print("Click", i, j, "- Board", self.board.board[i][j].value)
 		self.click(i,j)
+
 
 	def on_button_press_event(self, widget, event, i, j):
 		button = widget.get_child()
@@ -178,7 +195,7 @@ class MainWindow(Gtk.Window):
 	def update_single_button(self, i, j):
 		button = self.grid.get_child_at(i, j).get_child()
 		button.set_active(True)
-		button.set_label(str(board.board[i][j]))
+		button.set_label(str(self.board.board[i][j]))
 
 	def click(self, i, j):
 		size = self.size
@@ -189,7 +206,7 @@ class MainWindow(Gtk.Window):
 				board.still_hidden -= 1
 				self.board.board[i][j].show()
 				self.update_single_button(i,j)
-			if(board.still_hidden == 0):
+			if(self.board.still_hidden == 0):
 				self.win()
 		elif (self.board.board[i][j].type == TileType.MINE and self.board.board[i][j].hidden):
 			#Lose the game
@@ -297,8 +314,7 @@ else:
 		global_size = int(sys.argv[2])
 
 
-board = Board(global_size)
-window = MainWindow(global_size, board)
+window = MainWindow(global_size)
 window.connect("destroy", Gtk.main_quit)
 window.show_all()
 Gtk.main()
