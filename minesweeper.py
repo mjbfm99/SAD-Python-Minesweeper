@@ -203,7 +203,7 @@ class MainWindow(Gtk.Window):
 			if (self.board.board[i][j].value == 0):
 				self.showZeros(i, j)
 			else:
-				board.still_hidden -= 1
+				self.board.still_hidden -= 1
 				self.board.board[i][j].show()
 				self.update_single_button(i,j)
 			if(self.board.still_hidden == 0):
@@ -278,18 +278,18 @@ class SizeChooserDialog(Gtk.Dialog):
 		label.set_name("size_label")
 		label.set_vexpand(True)
 
-		self.spin = Gtk.SpinButton()
-		self.spin.set_adjustment(Gtk.Adjustment(upper=16, lower=4, step_increment=1))
-		self.spin.set_value(8)
-		self.spin.connect("value-changed", self.on_value_changed)
-		self.spin.set_vexpand(False)
-		box.add(self.spin)
+		self.scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=Gtk.Adjustment(upper=16, lower=4, step_increment=1))
+		self.scale.set_value(8)
+		self.scale.set_digits(0)
+		self.scale.set_hexpand(True)
+		self.scale.connect("value-changed", self.on_value_changed)
+		box.add(self.scale)
 
 		self.label2 = Gtk.Label()
 		box.add(self.label2)
 		self.label2.set_name("size_label")
 		self.label2.set_vexpand(True)
-		self.label2.set_markup("Your board will have <b>" + str(pow(self.spin.get_value_as_int(), 2)) + "</b> tiles")
+		self.label2.set_markup("Your board will be <b>" + str(global_size) + "x" + str(global_size) + "</b> with <b>" + str(pow(int(self.scale.get_value()), 2)) + "</b> tiles")
 
 		self.show_all()
 
@@ -297,8 +297,8 @@ class SizeChooserDialog(Gtk.Dialog):
 
 	def on_value_changed(self, spin):
 		global global_size
-		global_size = self.spin.get_value_as_int()
-		self.label2.set_markup("Your board will have <b>" + str(pow(self.spin.get_value_as_int(), 2)) + "</b> tiles")
+		global_size = int(self.scale.get_value())
+		self.label2.set_markup("Your board will be <b>" + str(global_size) + "x" + str(global_size) + "</b> with <b>" + str(pow(int(self.scale.get_value()), 2)) + "</b> tiles")
 
 	def close(self, button, response_id):
 		self.destroy()
