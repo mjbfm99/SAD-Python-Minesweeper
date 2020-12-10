@@ -289,7 +289,7 @@ class SizeChooserDialog(Gtk.Dialog):
 		box.add(self.label2)
 		self.label2.set_name("size_label")
 		self.label2.set_vexpand(True)
-		self.label2.set_markup("Your board will be <b>" + str(global_size) + "x" + str(global_size) + "</b> with <b>" + str(pow(int(self.scale.get_value()), 2)) + "</b> tiles")
+		self.label2.set_markup("Your board will be <b>" + str(global_size) + "✕" + str(global_size) + "</b> with <b>" + str(pow(int(self.scale.get_value()), 2)) + "</b> tiles")
 
 		self.show_all()
 
@@ -298,7 +298,7 @@ class SizeChooserDialog(Gtk.Dialog):
 	def on_value_changed(self, spin):
 		global global_size
 		global_size = int(self.scale.get_value())
-		self.label2.set_markup("Your board will be <b>" + str(global_size) + "x" + str(global_size) + "</b> with <b>" + str(pow(int(self.scale.get_value()), 2)) + "</b> tiles")
+		self.label2.set_markup("Your board will be <b>" + str(global_size) + "✕" + str(global_size) + "</b> with <b>" + str(pow(int(self.scale.get_value()), 2)) + "</b> tiles")
 
 	def close(self, button, response_id):
 		self.destroy()
