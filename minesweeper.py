@@ -51,28 +51,37 @@ class Tile:
 
 class Board:
 	def __init__(self, size, clicked_i, clicked_j):
-		self.size = size;
+		self.size = size
 		self.board = [[None for i in range(size)] for j in range(size)]
 		self.still_hidden = 0
 
 
 		self.board[clicked_i][clicked_j] = Tile(TileType.FREE)
+		self.still_hidden += 1
 		if (clicked_i > 0):
 			self.board[clicked_i - 1][clicked_j] = Tile(TileType.FREE)
+			self.still_hidden += 1
 			if (clicked_j > 0):
 				self.board[clicked_i - 1][clicked_j - 1] = Tile(TileType.FREE)
+				self.still_hidden += 1
 			if (clicked_j < size - 1):
 				self.board[clicked_i - 1][clicked_j + 1] = Tile(TileType.FREE)
+				self.still_hidden += 1
 		if (clicked_i < size - 1):
 			self.board[clicked_i + 1][clicked_j] = Tile(TileType.FREE)
+			self.still_hidden += 1
 			if (clicked_j > 0):
 				self.board[clicked_i + 1][clicked_j - 1] = Tile(TileType.FREE)
+				self.still_hidden += 1
 			if (clicked_j < size - 1):
 				self.board[clicked_i + 1][clicked_j + 1] = Tile(TileType.FREE)
+				self.still_hidden += 1
 		if (clicked_j > 0):
 			self.board[clicked_i][clicked_j - 1] = Tile(TileType.FREE)
+			self.still_hidden += 1
 		if (clicked_j < size - 1):
 			self.board[clicked_i][clicked_j + 1] = Tile(TileType.FREE)
+			self.still_hidden += 1
 
 		for i in range(size):
 			for j in range(size):
@@ -81,7 +90,6 @@ class Board:
 					if (x >= 0.25):
 						self.board[i][j] = Tile(TileType.FREE) # no mine
 						self.still_hidden += 1
-						#print(self.still_hidden, end=" ")
 					else:
 						self.board[i][j] = Tile(TileType.MINE) # mine
 						#print("X", end=" ")
@@ -130,7 +138,7 @@ class Board:
 			print()
 
 
-class MainWindow(Gtk.Window):
+class MainWindow(Gtk.Window): 
 	def __init__(self, size):
 		Gtk.Window.__init__(self, resizable=False)
 
@@ -194,6 +202,7 @@ class MainWindow(Gtk.Window):
 		button.set_label(str(self.board.board[i][j]))
 
 	def click(self, i, j):
+		print(self.board.still_hidden, end=" ")
 		size = self.size
 		if (self.board.board[i][j].type == TileType.FREE and self.board.board[i][j].hidden):
 			if (self.board.board[i][j].value == 0):
@@ -207,7 +216,7 @@ class MainWindow(Gtk.Window):
 		elif (self.board.board[i][j].type == TileType.MINE and self.board.board[i][j].hidden):
 			#Lose the game
 			self.lose()
-		#print(board.still_hidden)
+		print(self.board.still_hidden)
 
 	def lose(self):
 		# Uncover all
