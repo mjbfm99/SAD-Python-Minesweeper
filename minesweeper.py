@@ -18,7 +18,6 @@ context.add_provider_for_screen(screen, css_provider, Gtk.STYLE_PROVIDER_PRIORIT
 global_size = 8
 
 
-# Game
 class TileType(Enum):
 	FREE = 0
 	MINE = 1
@@ -92,7 +91,6 @@ class Board:
 						self.still_hidden += 1
 					else:
 						self.board[i][j] = Tile(TileType.MINE) # mine
-						#print("X", end=" ")
 
 
 
@@ -162,7 +160,6 @@ class MainWindow(Gtk.Window):
 		self.new_game = True
 		self.board = None
 
-		#print()
 		for i in range(self.size):
 			for j in range(self.size):
 				eventbox = Gtk.EventBox()
@@ -176,7 +173,6 @@ class MainWindow(Gtk.Window):
 				eventbox.add(button)
 				self.grid.attach(eventbox, i, j, 1, 1)
 				button.set_name("grid-button")
-			#print()
 
 
 	def on_clicked(self, button, i, j):
@@ -202,7 +198,6 @@ class MainWindow(Gtk.Window):
 		button.set_label(str(self.board.board[i][j]))
 
 	def click(self, i, j):
-		print(self.board.still_hidden, end=" ")
 		size = self.size
 		if (self.board.board[i][j].type == TileType.FREE and self.board.board[i][j].hidden):
 			if (self.board.board[i][j].value == 0):
@@ -216,7 +211,6 @@ class MainWindow(Gtk.Window):
 		elif (self.board.board[i][j].type == TileType.MINE and self.board.board[i][j].hidden):
 			#Lose the game
 			self.lose()
-		print(self.board.still_hidden)
 
 	def lose(self):
 		# Uncover all
@@ -250,7 +244,6 @@ class MainWindow(Gtk.Window):
 		os.execl(sys.executable, os.path.abspath(__file__), *args)
 
 	def showZeros(self, i, j):
-		#print("SHOWZEROS: ", i, "", j)
 		if(not(i < 0 or i > self.size - 1 or j < 0 or j > self.size - 1)):
 			# Don't check tiles out of the board!
 			# Show the tile if it is next to a 0 and it is hidden
