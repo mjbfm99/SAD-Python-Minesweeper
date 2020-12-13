@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import gi
 import random
@@ -49,30 +49,12 @@ class Tile:
 				string = "✸"
 		return string
 
-# DONE: Win style
-# DONE: Ask user for board size
-# DONE: HeaderBar
-# DONE: Remove prints
-# DONE: Start over
-# DONE: Bomb exploded proper icon
-# DONE: Flag functionality ⚑
-# DONE: Built-in CSS
-
 class Board:
 	def __init__(self, size, clicked_i, clicked_j):
 		self.size = size;
-		self.board = [[Tile(TileType.FREE) for i in range(size)] for j in range(size)]
+		self.board = [[None for i in range(size)] for j in range(size)]
 		self.still_hidden = 0
-		for i in range(size):
-			for j in range(size):
-				x = random.uniform(0,1)
-				if (x >= 14/64):
-					self.board[i][j] = Tile(TileType.FREE) # no mine
-					self.still_hidden += 1
-					#print(self.still_hidden, end=" ")
-				else:
-					self.board[i][j] = Tile(TileType.MINE) # mine
-					#print("X", end=" ")
+
 
 		self.board[clicked_i][clicked_j] = Tile(TileType.FREE)
 		if (clicked_i > 0):
@@ -91,6 +73,20 @@ class Board:
 			self.board[clicked_i][clicked_j - 1] = Tile(TileType.FREE)
 		if (clicked_j < size - 1):
 			self.board[clicked_i][clicked_j + 1] = Tile(TileType.FREE)
+
+		for i in range(size):
+			for j in range(size):
+				x = random.uniform(0,1)
+				if (self.board[i][j] == None):
+					if (x >= 0.25):
+						self.board[i][j] = Tile(TileType.FREE) # no mine
+						self.still_hidden += 1
+						#print(self.still_hidden, end=" ")
+					else:
+						self.board[i][j] = Tile(TileType.MINE) # mine
+						#print("X", end=" ")
+
+
 
 		for i in range(size):
 			for j in range(size):
@@ -243,6 +239,7 @@ class MainWindow(Gtk.Window):
 	def startOver(self, button):
 		args = [sys.argv[0], str(self.size)]
 		os.execl(sys.executable, os.path.abspath(__file__), *args)
+
 	def showZeros(self, i, j):
 		#print("SHOWZEROS: ", i, "", j)
 		if(not(i < 0 or i > self.size - 1 or j < 0 or j > self.size - 1)):
